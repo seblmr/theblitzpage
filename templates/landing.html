@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>{{ product_name }}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    function downloadHTML() {
+      const blob = new Blob([document.documentElement.outerHTML], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = '{{ product_name | replace(" ", "-") | lower }}-landing.html';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+    function copyThread() {
+      const thread = document.getElementById('x-thread').innerText;
+      navigator.clipboard.writeText(thread).then(() => alert('✅ Thread copied to clipboard! Paste it on X right now.'));
+    }
+  </script>
+</head>
+<body class="bg-zinc-950 text-white">
+  <div class="max-w-5xl mx-auto px-6 py-16">
+    <!-- Hero -->
+    <div class="text-center mb-16">
+      <h1 class="text-7xl font-black tracking-tighter">{{ product_name }}</h1>
+      <p class="text-4xl text-violet-400 mt-6 font-medium">{{ tagline }}</p>
+    </div>
+
+    <div class="max-w-3xl mx-auto">
+      <p class="text-2xl leading-relaxed text-zinc-300 mb-16">{{ description }}</p>
+    </div>
+
+    <!-- Pricing -->
+    <div class="bg-zinc-900 rounded-3xl p-12 text-center mx-auto max-w-md">
+      <div class="inline-flex items-baseline gap-2">
+        <span class="text-8xl font-black">{{ price }}</span>
+        <span class="text-3xl font-medium text-zinc-400">€/month</span>
+      </div>
+      <button onclick="alert('✅ Stripe test payment triggered! Real Stripe integration in V3 (2 lines of code)')" 
+              class="mt-10 block w-full bg-white text-black py-6 rounded-3xl text-2xl font-bold hover:scale-105 transition">
+        {{ cta_text }}
+      </button>
+    </div>
+
+    <!-- Features -->
+    <div class="grid md:grid-cols-3 gap-6 mt-20">
+      {% for feature in features %}
+      <div class="bg-zinc-900 rounded-3xl p-8 text-center">
+        <div class="text-5xl mb-6">⭐</div>
+        <p class="text-xl">{{ feature }}</p>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- X/Twitter Launch Thread (ready to post) -->
+    <div class="mt-20 bg-zinc-900 rounded-3xl p-10">
+      <h2 class="text-3xl font-bold mb-6 flex items-center gap-3">
+        <span>🐦</span> Ready-to-post X/TikTok Thread
+      </h2>
+      <pre id="x-thread" class="whitespace-pre-wrap text-zinc-300 text-lg leading-relaxed bg-black p-6 rounded-2xl">
+Just launched {{ product_name }} in under 30 seconds from my phone! 🔥
+
+{{ tagline }}
+
+It’s literally the fastest way for indie hackers & creators to get a pro landing page.
+
+Price: only {{ price }}€/mo
+
+Why it slaps:
+{% for feature in features %}- {{ feature }}
+{% endfor %}
+
+Built 100% phone-only with Termux. No laptop needed.
+
+Who wants the link? 👇
+      </pre>
+      <div class="flex gap-4 mt-8">
+        <button onclick="copyThread()" class="flex-1 bg-white text-black py-5 rounded-3xl font-bold text-xl">📋 Copy Thread</button>
+        <button onclick="downloadHTML()" class="flex-1 bg-violet-600 hover:bg-violet-700 py-5 rounded-3xl font-bold text-xl">⬇️ Download Full HTML</button>
+      </div>
+    </div>
+
+    <div class="text-center mt-16 text-zinc-500 text-sm">
+      Made in 30 seconds with <strong>BlitzPage</strong> • Phone-only • 2026 🔥
+    </div>
+  </div>
+</body>
+</html>
+
