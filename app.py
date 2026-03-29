@@ -7,7 +7,6 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'blitzpage-secret-2026')
 stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
 
-# Supabase client
 supabase: Client = create_client(
     os.environ.get('SUPABASE_URL'),
     os.environ.get('SUPABASE_ANON_KEY')
@@ -23,10 +22,12 @@ def home():
             'price': request.form.get('price', '19'),
             'cta_text': request.form.get('cta_text', 'Get it now!'),
             'audience': request.form.get('audience', 'Indie hackers & creators'),
-            'features': [f.strip() for f in request.form.get('features', 'Lightning fast,Phone-only,Zero budget').split(',') if f.strip()]
+            'features': [f.strip() for f in request.form.get('features', 'Lightning fast,Phone-only,Zero budget').split(',') if f.strip()],
+            'email': request.form.get('email', '')   # ← NOUVEAU
         }
         while len(data['features']) < 3:
             data['features'].append(['Lightning fast', 'Phone-only', 'Zero budget'][len(data['features'])])
+
         session['last_landing'] = data
         return render_template('landing.html', **data, paid=False)
     return render_template('index.html')
@@ -36,6 +37,7 @@ def create_checkout_session():
     try:
         product_name = request.form.get('product_name')
         price_cents = int(float(request.form.get('price', 19)) * 100)
+
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             line_items=[{
@@ -57,25 +59,33 @@ def create_checkout_session():
 @app.route('/success')
 def success():
     data = session.get('last_landing', {})
-    if data:
+    if data and data.get('email'):
         data['paid'] = True
-        # Sauvegarde automatique dans Supabase
+        # Sauvegarde avec email (propriétaire)
         supabase.table('landings').insert({
             'product_name': data['product_name'],
             'tagline': data['tagline'],
             'description': data['description'],
             'price': data['price'],
-            'features': data['features']
+            'features': data['features'],
+            'email': data['email']
         }).execute()
         return render_template('landing.html', **data)
     return render_template('success.html')
 
-@app.route('/my-landings')
+@app.route('/my-landings', methods=['GET', 'POST'])
 def my_landings():
-    # Récupère les 20 dernières landings sauvegardées
-    response = supabase.table('landings').select('*').order('created_at', desc=True).limit(20).execute()
-    landings = response.data
-    return render_template('my-landings.html', landings=landings)
+    if request.method == 'POST':
+        email = request.form.get('email')
+    else:
+        email = request.args.get('email', '')
+
+    if email:
+        response = supabase.table('landings').select('*').eq('email', email).order('created_at', desc=True).execute()
+        landings = response.data
+    else:
+        landings = []
+    return render_template('my-landings.html', landings=landings, email=email)
 
 @app.route('/cancel')
 def cancel():
@@ -84,3 +94,4 @@ def cancel():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
+

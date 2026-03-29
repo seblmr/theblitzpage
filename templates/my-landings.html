@@ -8,8 +8,13 @@
 <body class="bg-zinc-950 text-white min-h-screen">
   <div class="max-w-5xl mx-auto px-6 py-12">
     <h1 class="text-5xl font-black mb-8">🚀 My Landings</h1>
-    <a href="/" class="inline-block mb-8 bg-violet-600 px-6 py-3 rounded-3xl text-lg font-bold">← Create New Landing</a>
     
+    <form method="POST" class="mb-8 max-w-md mx-auto">
+      <input type="email" name="email" value="{{ email }}" placeholder="your@email.com" required
+             class="w-full bg-zinc-800 rounded-3xl px-6 py-4 text-lg">
+      <button type="submit" class="mt-4 w-full bg-violet-600 py-5 rounded-3xl font-bold">Show my landings</button>
+    </form>
+
     {% if landings %}
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       {% for landing in landings %}
@@ -17,16 +22,15 @@
         <h2 class="text-3xl font-bold">{{ landing.product_name }}</h2>
         <p class="text-violet-400 text-xl mt-2">{{ landing.tagline }}</p>
         <p class="text-zinc-400 mt-6 line-clamp-3">{{ landing.description }}</p>
-        <div class="flex gap-2 mt-8">
-          <a href="/" class="flex-1 text-center bg-white text-black py-4 rounded-3xl font-bold">Re-use this template</a>
-        </div>
         <p class="text-xs text-zinc-500 mt-6">Created {{ landing.created_at[:10] }}</p>
       </div>
       {% endfor %}
     </div>
     {% else %}
-    <p class="text-2xl text-zinc-400">No landings yet. Create and pay your first one!</p>
+    <p class="text-2xl text-zinc-400">No landings yet for this email.</p>
     {% endif %}
+    
+    <a href="/" class="inline-block mt-12 bg-violet-600 px-8 py-4 rounded-3xl text-xl font-bold">← Create New Landing</a>
   </div>
 </body>
 </html>

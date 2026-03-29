@@ -5,7 +5,7 @@
   <title>{{ product_name }}</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    function downloadHTML() {
+    function downloadHTML() { /* même fonction que avant */ 
       const blob = new Blob([document.documentElement.outerHTML], { type: 'text/html' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -34,6 +34,8 @@
       <p class="text-2xl leading-relaxed text-zinc-300 mb-16">{{ description }}</p>
     </div>
 
+    <!-- STRIPE FORM → CACHÉ APRÈS PAIEMENT -->
+    {% if not paid %}
     <form method="POST" action="/create-checkout-session" class="bg-zinc-900 rounded-3xl p-12 text-center mx-auto max-w-md">
       <input type="hidden" name="product_name" value="{{ product_name }}">
       <input type="hidden" name="price" value="{{ price }}">
@@ -45,6 +47,7 @@
         {{ cta_text }}
       </button>
     </form>
+    {% endif %}
 
     <div class="grid md:grid-cols-3 gap-6 mt-20">
       {% for feature in features %}
@@ -77,17 +80,14 @@ Link in bio 👇</pre>
         <button onclick="copyThread()" class="flex-1 bg-white text-black py-5 rounded-3xl font-bold text-xl">📋 Copy Thread</button>
         <button onclick="downloadHTML()" class="flex-1 bg-violet-600 hover:bg-violet-700 py-5 rounded-3xl font-bold text-xl">⬇️ Download Full HTML</button>
       </div>
-      <a href="/my-landings" class="block text-center mt-12 text-violet-400 text-xl font-bold">→ See all my saved landings</a>
+      <a href="/my-landings?email={{ email }}" class="block text-center mt-12 text-violet-400 text-xl font-bold">→ See all my saved landings</a>
     </div>
     {% else %}
     <div class="mt-20 bg-zinc-900/50 border border-dashed border-amber-400 rounded-3xl p-10 text-center">
       <p class="text-2xl text-amber-300">🔒 Full X thread + HTML download unlocked after payment</p>
     </div>
     {% endif %}
-
-    <div class="text-center mt-16 text-zinc-500 text-sm">
-      Made with <strong>BlitzPage</strong> • Phone-only • Real Stripe • Supabase • 2026 🔥
-    </div>
   </div>
 </body>
 </html>
+

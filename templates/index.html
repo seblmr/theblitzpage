@@ -14,38 +14,35 @@
     
     <form method="POST" class="space-y-6 bg-zinc-900 p-8 rounded-3xl">
       <div>
+        <label class="block text-sm mb-2 font-medium">Your Email (to save your landings)</label>
+        <input type="email" name="email" class="w-full bg-zinc-800 rounded-2xl px-6 py-4 text-lg" placeholder="you@email.com" required>
+      </div>
+      <div>
         <label class="block text-sm mb-2 font-medium">Product Name</label>
         <input type="text" name="product_name" class="w-full bg-zinc-800 rounded-2xl px-6 py-4 text-lg" placeholder="SideHustle Bot" required>
       </div>
       <div>
-        <label class="block text-sm mb-2 font-medium">Tagline (catchy phrase)</label>
+        <label class="block text-sm mb-2 font-medium">Tagline</label>
         <input type="text" name="tagline" class="w-full bg-zinc-800 rounded-2xl px-6 py-4 text-lg" placeholder="The bot that finds phone-only side hustles">
       </div>
       <div>
-        <label class="block text-sm mb-2 font-medium">Description (2-4 sentences)</label>
-        <textarea name="description" rows="4" class="w-full bg-zinc-800 rounded-2xl px-6 py-4 text-lg" placeholder="Describe your product..."></textarea>
+        <label class="block text-sm mb-2 font-medium">Description</label>
+        <textarea name="description" rows="4" class="w-full bg-zinc-800 rounded-2xl px-6 py-4 text-lg"></textarea>
       </div>
       <div class="grid grid-cols-2 gap-6">
         <div>
-          <label class="block text-sm mb-2 font-medium">Price (€/month)</label>
+          <label class="block text-sm mb-2 font-medium">Price (€)</label>
           <input type="text" name="price" value="14" class="w-full bg-zinc-800 rounded-2xl px-6 py-4 text-lg">
         </div>
         <div>
-          <label class="block text-sm mb-2 font-medium">Target Audience</label>
-          <input type="text" name="audience" value="Indie hackers & creators" class="w-full bg-zinc-800 rounded-2xl px-6 py-4 text-lg">
+          <label class="block text-sm mb-2 font-medium">Features (comma separated)</label>
+          <input type="text" name="features" value="Lightning fast,Phone-only,Zero budget" class="w-full bg-zinc-800 rounded-2xl px-6 py-4 text-lg">
         </div>
-      </div>
-      <div>
-        <label class="block text-sm mb-2 font-medium">Key Features (comma separated)</label>
-        <input type="text" name="features" value="Lightning fast,Phone-only,Zero budget" class="w-full bg-zinc-800 rounded-2xl px-6 py-4 text-lg">
       </div>
       <button type="submit" class="w-full bg-violet-600 hover:bg-violet-700 py-6 rounded-3xl text-2xl font-bold">
         GENERATE MY LANDING PAGE 🔥
       </button>
     </form>
-    
-    <p class="text-center text-zinc-500 text-sm mt-8">100 % built with Termux • Phone-only startup mode • 2026</p>
   </div>
 </body>
 </html>
-
