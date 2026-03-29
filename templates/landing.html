@@ -19,6 +19,10 @@
   </script>
 </head>
 <body class="bg-zinc-950 text-white">
+  {% if paid %}
+  <div class="bg-green-500 text-black text-center py-6 font-bold text-2xl">✅ PAYMENT SUCCESSFUL! Your landing page is ready.</div>
+  {% endif %}
+
   <div class="max-w-5xl mx-auto px-6 py-16">
     <div class="text-center mb-16">
       <h1 class="text-7xl font-black tracking-tighter">{{ product_name }}</h1>
@@ -28,7 +32,7 @@
       <p class="text-2xl leading-relaxed text-zinc-300 mb-16">{{ description }}</p>
     </div>
 
-    <!-- REAL STRIPE CHECKOUT FORM -->
+    <!-- STRIPE FORM -->
     <form method="POST" action="/create-checkout-session" class="bg-zinc-900 rounded-3xl p-12 text-center mx-auto max-w-md">
       <input type="hidden" name="product_name" value="{{ product_name }}">
       <input type="hidden" name="price" value="{{ price }}">
@@ -41,6 +45,7 @@
       </button>
     </form>
 
+    <!-- Features -->
     <div class="grid md:grid-cols-3 gap-6 mt-20">
       {% for feature in features %}
       <div class="bg-zinc-900 rounded-3xl p-8 text-center">
@@ -50,6 +55,7 @@
       {% endfor %}
     </div>
 
+    <!-- X Thread -->
     <div class="mt-20 bg-zinc-900 rounded-3xl p-10">
       <h2 class="text-3xl font-bold mb-6 flex items-center gap-3"><span>🐦</span> Ready-to-post X Thread</h2>
       <pre id="x-thread" class="whitespace-pre-wrap text-zinc-300 text-lg leading-relaxed bg-black p-6 rounded-2xl">Just launched {{ product_name }} in 30 seconds from my phone! 🔥

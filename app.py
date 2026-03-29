@@ -1,9 +1,9 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, session
 import stripe
 import os
 
 app = Flask(__name__)
-
+app.secret_key = os.environ.get('SECRET_KEY', 'blitzpage-secret-2026')
 stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
 
 @app.route('/', methods=['GET', 'POST'])
@@ -20,6 +20,7 @@ def home():
         }
         while len(data['features']) < 3:
             data['features'].append(['Lightning fast', 'Phone-only', 'Zero budget'][len(data['features'])])
+        session['last_landing'] = data                     # ← FIX : on sauvegarde la landing
         return render_template('landing.html', **data)
     return render_template('index.html')
 
@@ -48,6 +49,10 @@ def create_checkout_session():
 
 @app.route('/success')
 def success():
+    data = session.get('last_landing', {})
+    if data:
+        data['paid'] = True                                 # ← on ajoute le bandeau succès
+        return render_template('landing.html', **data)
     return render_template('success.html')
 
 @app.route('/cancel')
