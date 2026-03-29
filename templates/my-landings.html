@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>My Landings • BlitzPage</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-zinc-950 text-white min-h-screen">
+  <div class="max-w-5xl mx-auto px-6 py-12">
+    <h1 class="text-5xl font-black mb-8">🚀 My Landings</h1>
+    <a href="/" class="inline-block mb-8 bg-violet-600 px-6 py-3 rounded-3xl text-lg font-bold">← Create New Landing</a>
+    
+    {% if landings %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {% for landing in landings %}
+      <div class="bg-zinc-900 rounded-3xl p-8">
+        <h2 class="text-3xl font-bold">{{ landing.product_name }}</h2>
+        <p class="text-violet-400 text-xl mt-2">{{ landing.tagline }}</p>
+        <p class="text-zinc-400 mt-6 line-clamp-3">{{ landing.description }}</p>
+        <div class="flex gap-2 mt-8">
+          <a href="/" class="flex-1 text-center bg-white text-black py-4 rounded-3xl font-bold">Re-use this template</a>
+        </div>
+        <p class="text-xs text-zinc-500 mt-6">Created {{ landing.created_at[:10] }}</p>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-2xl text-zinc-400">No landings yet. Create and pay your first one!</p>
+    {% endif %}
+  </div>
+</body>
+</html>

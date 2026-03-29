@@ -20,9 +20,9 @@
 </head>
 <body class="bg-zinc-950 text-white">
   {% if paid %}
-  <div class="bg-green-500 text-black text-center py-6 font-bold text-2xl">✅ PAYMENT SUCCESSFUL! Full access unlocked.</div>
+  <div class="bg-green-500 text-black text-center py-6 font-bold text-2xl">✅ PAYMENT SUCCESSFUL! Saved to My Landings.</div>
   {% else %}
-  <div class="bg-amber-500 text-black text-center py-6 font-bold text-2xl">🔒 Pay to unlock Download + Full X Thread</div>
+  <div class="bg-amber-500 text-black text-center py-6 font-bold text-2xl">🔒 Pay to unlock Download + X Thread</div>
   {% endif %}
 
   <div class="max-w-5xl mx-auto px-6 py-16">
@@ -34,7 +34,6 @@
       <p class="text-2xl leading-relaxed text-zinc-300 mb-16">{{ description }}</p>
     </div>
 
-    <!-- STRIPE FORM (toujours visible en preview) -->
     <form method="POST" action="/create-checkout-session" class="bg-zinc-900 rounded-3xl p-12 text-center mx-auto max-w-md">
       <input type="hidden" name="product_name" value="{{ product_name }}">
       <input type="hidden" name="price" value="{{ price }}">
@@ -47,7 +46,6 @@
       </button>
     </form>
 
-    <!-- Features -->
     <div class="grid md:grid-cols-3 gap-6 mt-20">
       {% for feature in features %}
       <div class="bg-zinc-900 rounded-3xl p-8 text-center">
@@ -57,7 +55,6 @@
       {% endfor %}
     </div>
 
-    <!-- X THREAD + DOWNLOAD → UNIQUEMENT APRÈS PAIEMENT -->
     {% if paid %}
     <div class="mt-20 bg-zinc-900 rounded-3xl p-10">
       <h2 class="text-3xl font-bold mb-6 flex items-center gap-3"><span>🐦</span> Ready-to-post X Thread</h2>
@@ -80,18 +77,17 @@ Link in bio 👇</pre>
         <button onclick="copyThread()" class="flex-1 bg-white text-black py-5 rounded-3xl font-bold text-xl">📋 Copy Thread</button>
         <button onclick="downloadHTML()" class="flex-1 bg-violet-600 hover:bg-violet-700 py-5 rounded-3xl font-bold text-xl">⬇️ Download Full HTML</button>
       </div>
+      <a href="/my-landings" class="block text-center mt-12 text-violet-400 text-xl font-bold">→ See all my saved landings</a>
     </div>
     {% else %}
     <div class="mt-20 bg-zinc-900/50 border border-dashed border-amber-400 rounded-3xl p-10 text-center">
       <p class="text-2xl text-amber-300">🔒 Full X thread + HTML download unlocked after payment</p>
-      <p class="text-zinc-400 mt-4">Pay now to get everything instantly</p>
     </div>
     {% endif %}
 
     <div class="text-center mt-16 text-zinc-500 text-sm">
-      Made with <strong>BlitzPage</strong> • Phone-only • Real Stripe • 2026 🔥
+      Made with <strong>BlitzPage</strong> • Phone-only • Real Stripe • Supabase • 2026 🔥
     </div>
   </div>
 </body>
 </html>
-

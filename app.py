@@ -1,10 +1,17 @@
 from flask import Flask, render_template, request, redirect, session
 import stripe
+from supabase import create_client, Client
 import os
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'blitzpage-secret-2026')
 stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
+
+# Supabase client
+supabase: Client = create_client(
+    os.environ.get('SUPABASE_URL'),
+    os.environ.get('SUPABASE_ANON_KEY')
+)
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
@@ -29,7 +36,6 @@ def create_checkout_session():
     try:
         product_name = request.form.get('product_name')
         price_cents = int(float(request.form.get('price', 19)) * 100)
-
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             line_items=[{
@@ -53,8 +59,23 @@ def success():
     data = session.get('last_landing', {})
     if data:
         data['paid'] = True
+        # Sauvegarde automatique dans Supabase
+        supabase.table('landings').insert({
+            'product_name': data['product_name'],
+            'tagline': data['tagline'],
+            'description': data['description'],
+            'price': data['price'],
+            'features': data['features']
+        }).execute()
         return render_template('landing.html', **data)
     return render_template('success.html')
+
+@app.route('/my-landings')
+def my_landings():
+    # Récupère les 20 dernières landings sauvegardées
+    response = supabase.table('landings').select('*').order('created_at', desc=True).limit(20).execute()
+    landings = response.data
+    return render_template('my-landings.html', landings=landings)
 
 @app.route('/cancel')
 def cancel():
