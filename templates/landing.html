@@ -20,7 +20,9 @@
 </head>
 <body class="bg-zinc-950 text-white">
   {% if paid %}
-  <div class="bg-green-500 text-black text-center py-6 font-bold text-2xl">✅ PAYMENT SUCCESSFUL! Your landing page is ready.</div>
+  <div class="bg-green-500 text-black text-center py-6 font-bold text-2xl">✅ PAYMENT SUCCESSFUL! Full access unlocked.</div>
+  {% else %}
+  <div class="bg-amber-500 text-black text-center py-6 font-bold text-2xl">🔒 Pay to unlock Download + Full X Thread</div>
   {% endif %}
 
   <div class="max-w-5xl mx-auto px-6 py-16">
@@ -32,7 +34,7 @@
       <p class="text-2xl leading-relaxed text-zinc-300 mb-16">{{ description }}</p>
     </div>
 
-    <!-- STRIPE FORM -->
+    <!-- STRIPE FORM (toujours visible en preview) -->
     <form method="POST" action="/create-checkout-session" class="bg-zinc-900 rounded-3xl p-12 text-center mx-auto max-w-md">
       <input type="hidden" name="product_name" value="{{ product_name }}">
       <input type="hidden" name="price" value="{{ price }}">
@@ -55,7 +57,8 @@
       {% endfor %}
     </div>
 
-    <!-- X Thread -->
+    <!-- X THREAD + DOWNLOAD → UNIQUEMENT APRÈS PAIEMENT -->
+    {% if paid %}
     <div class="mt-20 bg-zinc-900 rounded-3xl p-10">
       <h2 class="text-3xl font-bold mb-6 flex items-center gap-3"><span>🐦</span> Ready-to-post X Thread</h2>
       <pre id="x-thread" class="whitespace-pre-wrap text-zinc-300 text-lg leading-relaxed bg-black p-6 rounded-2xl">Just launched {{ product_name }} in 30 seconds from my phone! 🔥
@@ -75,9 +78,15 @@ Phone-only built with BlitzPage. No laptop needed.
 Link in bio 👇</pre>
       <div class="flex gap-4 mt-8">
         <button onclick="copyThread()" class="flex-1 bg-white text-black py-5 rounded-3xl font-bold text-xl">📋 Copy Thread</button>
-        <button onclick="downloadHTML()" class="flex-1 bg-violet-600 hover:bg-violet-700 py-5 rounded-3xl font-bold text-xl">⬇️ Download HTML</button>
+        <button onclick="downloadHTML()" class="flex-1 bg-violet-600 hover:bg-violet-700 py-5 rounded-3xl font-bold text-xl">⬇️ Download Full HTML</button>
       </div>
     </div>
+    {% else %}
+    <div class="mt-20 bg-zinc-900/50 border border-dashed border-amber-400 rounded-3xl p-10 text-center">
+      <p class="text-2xl text-amber-300">🔒 Full X thread + HTML download unlocked after payment</p>
+      <p class="text-zinc-400 mt-4">Pay now to get everything instantly</p>
+    </div>
+    {% endif %}
 
     <div class="text-center mt-16 text-zinc-500 text-sm">
       Made with <strong>BlitzPage</strong> • Phone-only • Real Stripe • 2026 🔥
@@ -85,3 +94,4 @@ Link in bio 👇</pre>
   </div>
 </body>
 </html>
+

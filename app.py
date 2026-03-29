@@ -20,8 +20,8 @@ def home():
         }
         while len(data['features']) < 3:
             data['features'].append(['Lightning fast', 'Phone-only', 'Zero budget'][len(data['features'])])
-        session['last_landing'] = data                     # ← FIX : on sauvegarde la landing
-        return render_template('landing.html', **data)
+        session['last_landing'] = data
+        return render_template('landing.html', **data, paid=False)
     return render_template('index.html')
 
 @app.route('/create-checkout-session', methods=['POST'])
@@ -29,6 +29,7 @@ def create_checkout_session():
     try:
         product_name = request.form.get('product_name')
         price_cents = int(float(request.form.get('price', 19)) * 100)
+
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             line_items=[{
@@ -51,7 +52,7 @@ def create_checkout_session():
 def success():
     data = session.get('last_landing', {})
     if data:
-        data['paid'] = True                                 # ← on ajoute le bandeau succès
+        data['paid'] = True
         return render_template('landing.html', **data)
     return render_template('success.html')
 
