@@ -4,14 +4,36 @@
   <meta charset="utf-8">
   <title>BlitzPage – Instant Landing Page Builder</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    async function generateIdea() {
+      const res = await fetch('/generate-idea', {method: 'POST'});
+      const idea = await res.json();
+      document.querySelector('input[name="product_name"]').value = idea.product_name;
+      document.querySelector('input[name="tagline"]').value = idea.tagline;
+      document.querySelector('textarea[name="description"]').value = idea.description;
+      document.querySelector('input[name="features"]').value = idea.features;
+      alert("✅ Idea generated! This one feels like 'this time it's the right one'. Fill your email and hit Generate 🔥");
+    }
+  </script>
 </head>
 <body class="bg-zinc-950 text-white min-h-screen flex items-center">
   <div class="max-w-2xl mx-auto px-6">
-    <div class="text-center mb-12">
+    <div class="text-center mb-8">
       <h1 class="text-5xl font-black mb-2">🚀 BLITZPAGE</h1>
-      <p class="text-xl text-violet-400">Create a pro landing page in 30 seconds from your phone</p>
+      <p class="text-xl text-violet-400">Create a pro landing page in 30 seconds • First $ in 24h</p>
     </div>
-    
+
+    <!-- IDEA GENERATOR -->
+    <div class="bg-emerald-900/30 border border-emerald-400 rounded-3xl p-8 mb-10 text-center">
+      <h2 class="text-3xl font-bold mb-4">Stuck for an idea?</h2>
+      <p class="text-emerald-300 mb-6">Get a clear, specific, phone-only side-hustle idea ready to launch today</p>
+      <button onclick="generateIdea()" 
+              class="bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-2xl py-6 px-12 rounded-3xl">
+        Generate a Winning Idea 🔥
+      </button>
+      <p class="text-xs text-emerald-400 mt-6">12+ hot 2026 ideas • Instant dopamine • 100% executable from phone</p>
+    </div>
+
     <form method="POST" class="space-y-6 bg-zinc-900 p-8 rounded-3xl">
       <div>
         <label class="block text-sm mb-2 font-medium">Your Email (to save your landings)</label>
@@ -19,11 +41,11 @@
       </div>
       <div>
         <label class="block text-sm mb-2 font-medium">Product Name</label>
-        <input type="text" name="product_name" class="w-full bg-zinc-800 rounded-2xl px-6 py-4 text-lg" placeholder="SideHustle Bot" required>
+        <input type="text" name="product_name" class="w-full bg-zinc-800 rounded-2xl px-6 py-4 text-lg" placeholder="SideHustle Scout Bot" required>
       </div>
       <div>
         <label class="block text-sm mb-2 font-medium">Tagline</label>
-        <input type="text" name="tagline" class="w-full bg-zinc-800 rounded-2xl px-6 py-4 text-lg" placeholder="The bot that finds phone-only side hustles">
+        <input type="text" name="tagline" class="w-full bg-zinc-800 rounded-2xl px-6 py-4 text-lg" placeholder="Finds profitable phone-only ideas daily">
       </div>
       <div>
         <label class="block text-sm mb-2 font-medium">Description</label>
@@ -31,12 +53,12 @@
       </div>
       <div class="grid grid-cols-2 gap-6">
         <div>
-          <label class="block text-sm mb-2 font-medium">Price (€)</label>
-          <input type="text" name="price" value="14" class="w-full bg-zinc-800 rounded-2xl px-6 py-4 text-lg">
+          <label class="block text-sm mb-2 font-medium">Price ($ one-time)</label>
+          <input type="text" name="price" value="16" class="w-full bg-zinc-800 rounded-2xl px-6 py-4 text-lg">
         </div>
         <div>
           <label class="block text-sm mb-2 font-medium">Features (comma separated)</label>
-          <input type="text" name="features" value="Lightning fast,Phone-only,Zero budget" class="w-full bg-zinc-800 rounded-2xl px-6 py-4 text-lg">
+          <input type="text" name="features" value="Daily alerts,Copy-paste templates,24h launch plan" class="w-full bg-zinc-800 rounded-2xl px-6 py-4 text-lg">
         </div>
       </div>
       <button type="submit" class="w-full bg-violet-600 hover:bg-violet-700 py-6 rounded-3xl text-2xl font-bold">

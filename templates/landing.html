@@ -14,22 +14,22 @@
     }
     function copyThread() {
       const thread = document.getElementById('x-thread').innerText;
-      navigator.clipboard.writeText(thread).then(() => alert('✅ Thread copié ! Colle-le sur X.'));
+      navigator.clipboard.writeText(thread).then(() => alert('✅ Thread copied! Paste on X.'));
     }
   </script>
 </head>
 <body class="bg-zinc-950 text-white">
   {% if paid %}
-  <div class="bg-green-500 text-black text-center py-6 font-bold text-2xl">✅ PAIEMENT RÉUSSI ! Tu as maintenant tout pour lancer en 24h.</div>
+  <div class="bg-green-500 text-black text-center py-6 font-bold text-2xl">✅ PAYMENT SUCCESSFUL! Your 24h launch machine is ready.</div>
   {% else %}
-  <div class="bg-amber-500 text-black text-center py-6 font-bold text-2xl">🔒 Paye pour débloquer le download + thread X + checklist 24h</div>
+  <div class="bg-amber-500 text-black text-center py-6 font-bold text-2xl">🔒 Pay $16 to unlock everything</div>
   {% endif %}
 
   <div class="max-w-5xl mx-auto px-6 py-16">
     <div class="text-center mb-16">
       <h1 class="text-7xl font-black tracking-tighter">{{ product_name }}</h1>
       <p class="text-4xl text-violet-400 mt-6 font-medium">{{ tagline }}</p>
-      <p class="mt-8 text-xl text-emerald-400 font-bold">Lance en 30 secondes depuis ton téléphone • Premiers € en 24h possible</p>
+      <p class="mt-8 text-xl text-emerald-400 font-bold">Launch in 30 seconds • First $ possible in 24h • Phone-only</p>
     </div>
 
     <div class="max-w-3xl mx-auto">
@@ -42,7 +42,7 @@
       <input type="hidden" name="price" value="{{ price }}">
       <div class="inline-flex items-baseline gap-2">
         <span class="text-8xl font-black">{{ price }}</span>
-        <span class="text-3xl font-medium text-zinc-400">€</span>
+        <span class="text-3xl font-medium text-zinc-400">$ one-time</span>
       </div>
       <button type="submit" class="mt-10 block w-full bg-white text-black py-6 rounded-3xl text-2xl font-bold hover:scale-105 transition">
         {{ cta_text }}
@@ -50,61 +50,53 @@
     </form>
     {% endif %}
 
-    <!-- Features ultra-alignées avec le document -->
     <div class="grid md:grid-cols-3 gap-6 mt-20">
-      <div class="bg-zinc-900 rounded-3xl p-8 text-center">
-        <div class="text-5xl mb-6">⚡</div>
-        <p class="text-xl">Clarté immédiate : passe de l’idée floue à l’action en 30 secondes</p>
-      </div>
-      <div class="bg-zinc-900 rounded-3xl p-8 text-center">
-        <div class="text-5xl mb-6">📱</div>
-        <p class="text-xl">100 % phone-only • Zéro laptop • Zéro surcharge mentale</p>
-      </div>
-      <div class="bg-zinc-900 rounded-3xl p-8 text-center">
-        <div class="text-5xl mb-6">💸</div>
-        <p class="text-xl">Premiers € rapides : validation en 24h max</p>
+      <div class="bg-zinc-900 rounded-3xl p-8 text-center"><div class="text-5xl mb-6">⚡</div><p class="text-xl">Clarity in 30 seconds</p></div>
+      <div class="bg-zinc-900 rounded-3xl p-8 text-center"><div class="text-5xl mb-6">📱</div><p class="text-xl">100% phone-only</p></div>
+      <div class="bg-zinc-900 rounded-3xl p-8 text-center"><div class="text-5xl mb-6">💸</div><p class="text-xl">First $ in 24h possible</p></div>
+    </div>
+
+    <!-- Q&A SECTION -->
+    <div class="mt-20 bg-zinc-900 rounded-3xl p-10">
+      <h2 class="text-3xl font-bold mb-8">❓ Quick Q&A</h2>
+      <div class="space-y-8">
+        <div><p class="font-semibold">Is it really phone-only?</p><p class="text-zinc-400">Yes. Built & deployed entirely from Termux on your phone. No laptop ever needed.</p></div>
+        <div><p class="font-semibold">Can I really make money in 24h?</p><p class="text-zinc-400">The 24h checklist + ready-to-post thread + Stripe button are designed exactly for that. Many users see first sales same day.</p></div>
+        <div><p class="font-semibold">What if I don't have an idea yet?</p><p class="text-zinc-400">Use the Idea Generator on the homepage — it gives you specific, dopamine-inducing ideas ready to launch.</p></div>
+        <div><p class="font-semibold">Is the $16 one-time or recurring?</p><p class="text-zinc-400">One-time payment. You own the landing forever.</p></div>
       </div>
     </div>
 
     {% if paid %}
-    <!-- 24H LAUNCH CHECKLIST (le vrai valeur ajoutée du document) -->
     <div class="mt-20 bg-emerald-900/30 border border-emerald-400 rounded-3xl p-10">
-      <h2 class="text-3xl font-bold mb-8 flex items-center gap-3">🚀 Checklist 24h pour tes premiers €</h2>
+      <h2 class="text-3xl font-bold mb-8">🚀 24h Launch Checklist</h2>
       <ul class="space-y-6 text-lg">
-        <li class="flex gap-4"><span class="text-emerald-400">1️⃣</span> Copie le thread X ci-dessous et poste-le</li>
-        <li class="flex gap-4"><span class="text-emerald-400">2️⃣</span> Télécharge la landing HTML et déploie-la (Render gratuit en 2 min)</li>
-        <li class="flex gap-4"><span class="text-emerald-400">3️⃣</span> Partage le lien dans 5 groupes Telegram / X</li>
-        <li class="flex gap-4"><span class="text-emerald-400">4️⃣</span> Tes premiers paiements arrivent (Stripe est déjà configuré)</li>
+        <li>1. Copy & post the X thread below</li>
+        <li>2. Download the HTML & deploy (free on Render)</li>
+        <li>3. Share in 5 groups → first $ incoming</li>
       </ul>
-      <p class="text-emerald-400 text-center mt-10 font-bold">Tu as maintenant tout pour passer à l’action sans réfléchir.</p>
     </div>
 
     <div class="mt-20 bg-zinc-900 rounded-3xl p-10">
-      <h2 class="text-3xl font-bold mb-6 flex items-center gap-3"><span>🐦</span> Ready-to-post X Thread</h2>
-      <pre id="x-thread" class="whitespace-pre-wrap text-zinc-300 text-lg leading-relaxed bg-black p-6 rounded-2xl">Juste lancé {{ product_name }} en 30 secondes depuis mon téléphone ! 🔥
+      <h2 class="text-3xl font-bold mb-6">🐦 Ready-to-post X Thread</h2>
+      <pre id="x-thread" class="whitespace-pre-wrap text-zinc-300 text-lg leading-relaxed bg-black p-6 rounded-2xl">Just launched {{ product_name }} in 30 seconds from my phone! 🔥
 
 {{ tagline }}
 
-Clarté immédiate + premiers € possibles en 24h.
-Zéro laptop. Zéro réflexion.
-
-Tout est prêt à copier-coller.
+Clarity + first $ possible in 24h.
+100% phone-only. No laptop needed.
 
 Link 👇</pre>
       <div class="flex gap-4 mt-8">
-        <button onclick="copyThread()" class="flex-1 bg-white text-black py-5 rounded-3xl font-bold text-xl">📋 Copier le Thread</button>
-        <button onclick="downloadHTML()" class="flex-1 bg-violet-600 hover:bg-violet-700 py-5 rounded-3xl font-bold text-xl">⬇️ Télécharger la Landing</button>
+        <button onclick="copyThread()" class="flex-1 bg-white text-black py-5 rounded-3xl font-bold text-xl">📋 Copy Thread</button>
+        <button onclick="downloadHTML()" class="flex-1 bg-violet-600 hover:bg-violet-700 py-5 rounded-3xl font-bold text-xl">⬇️ Download HTML</button>
       </div>
-      <a href="/my-landings?email={{ email }}" class="block text-center mt-12 text-violet-400 text-xl font-bold">→ Voir toutes mes landings sauvegardées</a>
-    </div>
-    {% else %}
-    <div class="mt-20 bg-zinc-900/50 border border-dashed border-amber-400 rounded-3xl p-10 text-center">
-      <p class="text-2xl text-amber-300">🔒 La checklist 24h + thread complet + download débloqués après paiement</p>
+      <a href="/my-landings?email={{ email }}" class="block text-center mt-12 text-violet-400 text-xl font-bold">→ See all my saved landings</a>
     </div>
     {% endif %}
 
     <div class="text-center mt-16 text-zinc-500 text-sm">
-      Made with <strong>BlitzPage</strong> • Phone-only • V8 “24h Launch Machine” • 2026 🔥
+      Made with <strong>BlitzPage V9</strong> • International • Phone-only • $16 one-time • 2026 🔥
     </div>
   </div>
 </body>
