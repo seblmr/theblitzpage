@@ -2,103 +2,118 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>{{ product_name }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BlitzPage – Instant Landing Page Builder</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    function downloadHTML() {
-      const blob = new Blob([document.documentElement.outerHTML], { type: 'text/html' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = '{{ product_name | replace(" ", "-") | lower }}-landing.html';
-      a.click(); URL.revokeObjectURL(url);
+  <style>
+    /* ✅ Toast notification (remplace alert) */
+    #toast {
+      position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(4rem);
+      background: #10b981; color: #000; font-weight: 700; font-size: 1rem;
+      padding: 1rem 2rem; border-radius: 9999px;
+      transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s;
+      opacity: 0; z-index: 1000; white-space: nowrap; pointer-events: none;
     }
-    function copyThread() {
-      const thread = document.getElementById('x-thread').innerText;
-      navigator.clipboard.writeText(thread).then(() => alert('✅ Thread copied! Paste on X.'));
+    #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+  </style>
+  <script>
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    async function generateIdea() {
+      const btn = document.getElementById('gen-btn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Generating…';
+      try {
+        const res = await fetch('/generate-idea', { method: 'POST' });
+        if (!res.ok) throw new Error();
+        const idea = await res.json();
+        document.querySelector('input[name="product_name"]').value = idea.product_name;
+        document.querySelector('input[name="tagline"]').value      = idea.tagline;
+        document.querySelector('textarea[name="description"]').value = idea.description;
+        document.querySelector('input[name="features"]').value     = idea.features;
+        showToast('✅ Idea loaded — fill your email & generate!');
+      } catch {
+        showToast('⚠️ Error generating idea, try again.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Generate a Winning Idea 🔥';
+      }
     }
   </script>
 </head>
-<body class="bg-zinc-950 text-white">
-  {% if paid %}
-  <div class="bg-green-500 text-black text-center py-6 font-bold text-2xl">✅ PAYMENT SUCCESSFUL! Your 24h launch machine is ready.</div>
-  {% else %}
-  <div class="bg-amber-500 text-black text-center py-6 font-bold text-2xl">🔒 Pay $16 to unlock everything</div>
-  {% endif %}
+<body class="bg-zinc-950 text-white min-h-screen flex items-center py-12">
 
-  <div class="max-w-5xl mx-auto px-6 py-16">
-    <div class="text-center mb-16">
-      <h1 class="text-7xl font-black tracking-tighter">{{ product_name }}</h1>
-      <p class="text-4xl text-violet-400 mt-6 font-medium">{{ tagline }}</p>
-      <p class="mt-8 text-xl text-emerald-400 font-bold">Launch in 30 seconds • First $ possible in 24h • Phone-only</p>
+  <!-- Toast -->
+  <div id="toast"></div>
+
+  <div class="max-w-2xl mx-auto px-6 w-full">
+    <div class="text-center mb-8">
+      <h1 class="text-5xl font-black mb-2">🚀 BLITZPAGE</h1>
+      <p class="text-xl text-violet-400">Create a pro landing page in 30 seconds • First $ in 24h</p>
     </div>
 
-    <div class="max-w-3xl mx-auto">
-      <p class="text-2xl leading-relaxed text-zinc-300 mb-16">{{ description }}</p>
+    <!-- IDEA GENERATOR -->
+    <div class="bg-emerald-900/30 border border-emerald-400 rounded-3xl p-8 mb-10 text-center">
+      <h2 class="text-3xl font-bold mb-4">Stuck for an idea?</h2>
+      <p class="text-emerald-300 mb-6">Get a clear, specific, phone-only side-hustle idea ready to launch today</p>
+      <button id="gen-btn" onclick="generateIdea()"
+              class="bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-black font-bold text-2xl py-6 px-12 rounded-3xl transition">
+        Generate a Winning Idea 🔥
+      </button>
+      <!-- ✅ FIX: comptage correct -->
+      <p class="text-xs text-emerald-400 mt-6">{{ ideas_count }} hot 2026 ideas • Start now • 100% executable from phone</p>
     </div>
 
-    {% if not paid %}
-    <form method="POST" action="/create-checkout-session" class="bg-zinc-900 rounded-3xl p-12 text-center mx-auto max-w-md">
-      <input type="hidden" name="product_name" value="{{ product_name }}">
-      <input type="hidden" name="price" value="{{ price }}">
-      <div class="inline-flex items-baseline gap-2">
-        <span class="text-8xl font-black">{{ price }}</span>
-        <span class="text-3xl font-medium text-zinc-400">$ one-time</span>
+    <form method="POST" class="space-y-6 bg-zinc-900 p-8 rounded-3xl">
+      <!-- ✅ Token CSRF -->
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+      <div>
+        <label class="block text-sm mb-2 font-medium">Your Email <span class="text-zinc-500">(to save your landings)</span></label>
+        <input type="email" name="email" required
+               class="w-full bg-zinc-800 rounded-2xl px-6 py-4 text-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
+               placeholder="you@email.com">
       </div>
-      <button type="submit" class="mt-10 block w-full bg-white text-black py-6 rounded-3xl text-2xl font-bold hover:scale-105 transition">
-        {{ cta_text }}
+      <div>
+        <label class="block text-sm mb-2 font-medium">Product Name</label>
+        <input type="text" name="product_name" required
+               class="w-full bg-zinc-800 rounded-2xl px-6 py-4 text-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
+               placeholder="SideHustle Scout Bot">
+      </div>
+      <div>
+        <label class="block text-sm mb-2 font-medium">Tagline</label>
+        <input type="text" name="tagline"
+               class="w-full bg-zinc-800 rounded-2xl px-6 py-4 text-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
+               placeholder="Finds profitable phone-only ideas daily">
+      </div>
+      <div>
+        <label class="block text-sm mb-2 font-medium">Description</label>
+        <textarea name="description" rows="4"
+                  class="w-full bg-zinc-800 rounded-2xl px-6 py-4 text-lg focus:outline-none focus:ring-2 focus:ring-violet-500"></textarea>
+      </div>
+      <div class="grid grid-cols-2 gap-6">
+        <div>
+          <label class="block text-sm mb-2 font-medium">Price ($ one-time)</label>
+          <!-- ✅ FIX: type="number" + min pour bloquer les valeurs invalides côté client -->
+          <input type="number" name="price" value="16" min="0.50" step="0.01" required
+                 class="w-full bg-zinc-800 rounded-2xl px-6 py-4 text-lg focus:outline-none focus:ring-2 focus:ring-violet-500">
+        </div>
+        <div>
+          <label class="block text-sm mb-2 font-medium">Features <span class="text-zinc-500 text-xs">(separated by commas)</span></label>
+          <input type="text" name="features" value="Daily alerts, Copy-paste templates, 24h launch plan"
+                 class="w-full bg-zinc-800 rounded-2xl px-6 py-4 text-lg focus:outline-none focus:ring-2 focus:ring-violet-500">
+        </div>
+      </div>
+      <button type="submit"
+              class="w-full bg-violet-600 hover:bg-violet-700 py-6 rounded-3xl text-2xl font-bold transition">
+        GENERATE MY LANDING PAGE 🔥
       </button>
     </form>
-    {% endif %}
-
-    <div class="grid md:grid-cols-3 gap-6 mt-20">
-      <div class="bg-zinc-900 rounded-3xl p-8 text-center"><div class="text-5xl mb-6">⚡</div><p class="text-xl">Clarity in 30 seconds</p></div>
-      <div class="bg-zinc-900 rounded-3xl p-8 text-center"><div class="text-5xl mb-6">📱</div><p class="text-xl">100% phone-only</p></div>
-      <div class="bg-zinc-900 rounded-3xl p-8 text-center"><div class="text-5xl mb-6">💸</div><p class="text-xl">First $ in 24h possible</p></div>
-    </div>
-
-    <!-- Q&A SECTION -->
-    <div class="mt-20 bg-zinc-900 rounded-3xl p-10">
-      <h2 class="text-3xl font-bold mb-8">❓ Quick Q&A</h2>
-      <div class="space-y-8">
-        <div><p class="font-semibold">Is it really phone-only?</p><p class="text-zinc-400">Yes. Built & deployed entirely from Termux on your phone. No laptop ever needed.</p></div>
-        <div><p class="font-semibold">Can I really make money in 24h?</p><p class="text-zinc-400">The 24h checklist + ready-to-post thread + Stripe button are designed exactly for that. Many users see first sales same day.</p></div>
-        <div><p class="font-semibold">What if I don't have an idea yet?</p><p class="text-zinc-400">Use the Idea Generator on the homepage — it gives you specific, dopamine-inducing ideas ready to launch.</p></div>
-        <div><p class="font-semibold">Is the $16 one-time or recurring?</p><p class="text-zinc-400">One-time payment. You own the landing forever.</p></div>
-      </div>
-    </div>
-
-    {% if paid %}
-    <div class="mt-20 bg-emerald-900/30 border border-emerald-400 rounded-3xl p-10">
-      <h2 class="text-3xl font-bold mb-8">🚀 24h Launch Checklist</h2>
-      <ul class="space-y-6 text-lg">
-        <li>1. Copy & post the X thread below</li>
-        <li>2. Download the HTML & deploy (free on Render)</li>
-        <li>3. Share in 5 groups → first $ incoming</li>
-      </ul>
-    </div>
-
-    <div class="mt-20 bg-zinc-900 rounded-3xl p-10">
-      <h2 class="text-3xl font-bold mb-6">🐦 Ready-to-post X Thread</h2>
-      <pre id="x-thread" class="whitespace-pre-wrap text-zinc-300 text-lg leading-relaxed bg-black p-6 rounded-2xl">Just launched {{ product_name }} in 30 seconds from my phone! 🔥
-
-{{ tagline }}
-
-Clarity + first $ possible in 24h.
-100% phone-only. No laptop needed.
-
-Link 👇</pre>
-      <div class="flex gap-4 mt-8">
-        <button onclick="copyThread()" class="flex-1 bg-white text-black py-5 rounded-3xl font-bold text-xl">📋 Copy Thread</button>
-        <button onclick="downloadHTML()" class="flex-1 bg-violet-600 hover:bg-violet-700 py-5 rounded-3xl font-bold text-xl">⬇️ Download HTML</button>
-      </div>
-      <a href="/my-landings?email={{ email }}" class="block text-center mt-12 text-violet-400 text-xl font-bold">→ See all my saved landings</a>
-    </div>
-    {% endif %}
-
-    <div class="text-center mt-16 text-zinc-500 text-sm">
-      Made with <strong>BlitzPage V9</strong> • International • Phone-only • $16 one-time • 2026 🔥
-    </div>
   </div>
 </body>
 </html>
-
