@@ -1,221 +1,171 @@
-from flask import Flask, render_template, request, redirect, session, abort
-import stripe
-from supabase import create_client, Client
-import os
-import random
-import secrets
-
-app = Flask(__name__)
-
-# ✅ FIX 1: Plus de secret key hardcodée — plante clairement si absente en prod
-_secret = os.environ.get('SECRET_KEY')
-if not _secret:
-    import sys
-    if os.environ.get('FLASK_ENV') == 'production':
-        print("ERREUR CRITIQUE : SECRET_KEY non définie en production.", file=sys.stderr)
-        sys.exit(1)
-    _secret = secrets.token_hex(32)   # temporaire pour le dev uniquement
-app.secret_key = _secret
-
-stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
-STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET')
-
-# ✅ FIX 2: DOMAIN validé au démarrage
-DOMAIN = os.environ.get('DOMAIN', 'http://localhost:5000').rstrip('/')
-
-supabase: Client = create_client(
-    os.environ.get('SUPABASE_URL'),
-    os.environ.get('SUPABASE_ANON_KEY')
-)
-
-# ✅ FIX 3: Comptage corrigé (6 idées, pas "12+")
-HOT_IDEAS = [
-    {"name": "SideHustle Scout Bot",   "tagline": "Finds profitable phone-only ideas daily",              "description": "Telegram bot that scans trends and sends you 3 ready-to-launch side hustles every morning. Zero laptop needed.",                                    "features": "Daily alerts,Copy-paste templates,24h launch plan"},
-    {"name": "Content Rocket",          "tagline": "Turn 1 YouTube video into 50 posts in 60 seconds",    "description": "Instant content repurposer for creators. Paste a link → get X threads, TikToks, LinkedIn posts & newsletter ready.",                          "features": "Phone-only,Lightning fast,Freemium model"},
-    {"name": "BlitzPage",               "tagline": "Landing pages in 30 seconds from your phone",         "description": "The tool you're using right now. Type 2 sentences → get full HTML + Stripe + X thread.",                                                       "features": "24h to first $,Zero laptop,International ready"},
-    {"name": "Micro-Influencer Hunter", "tagline": "Finds 50 micro-influencers ready to DM in 1 click",  "description": "Scans X & TikTok, finds creators in your niche with <10k followers and high engagement.",                                                      "features": "DM templates included,Alerts daily,Phone-only"},
-    {"name": "UGC Factory",             "tagline": "Generate 30 UGC video scripts per day",               "description": "AI-light script generator for UGC creators. Sell the videos to brands for $50-200 each.",                                                      "features": "Zero filming needed,Instant delivery,High demand"},
-    {"name": "Notion-to-Gumroad",       "tagline": "Turn any Notion page into a $9 product in 10 min",   "description": "One-click export + sales page + Stripe checkout.",                                                                                             "features": "Passive income,Phone-only,Tested templates"},
-]
-IDEAS_COUNT = len(HOT_IDEAS)  # utilisé dans le template
-
-# ─── Helpers ──────────────────────────────────────────────────────────────────
-
-def _validate_price(raw, default=16.0):
-    """Retourne un float > 0, ou la valeur par défaut."""
-    try:
-        val = float(raw)
-        if val <= 0:
-            raise ValueError
-        return round(val, 2)
-    except (TypeError, ValueError):
-        return default
-
-def _generate_csrf():
-    token = secrets.token_hex(16)
-    session['csrf_token'] = token
-    return token
-
-def _check_csrf():
-    token = request.form.get('csrf_token', '')
-    if not token or token != session.get('csrf_token'):
-        abort(403)
-
-# ─── Routes ───────────────────────────────────────────────────────────────────
-
-@app.route('/', methods=['GET', 'POST'])
-def home():
-    if request.method == 'POST':
-        _check_csrf()  # ✅ FIX 4 : protection CSRF
-
-        # ✅ FIX 5 : validation du prix
-        price = _validate_price(request.form.get('price', '16'))
-
-        data = {
-            'product_name': request.form.get('product_name', '').strip(),
-            'tagline':      request.form.get('tagline', '').strip(),
-            'description':  request.form.get('description', '').strip(),
-            'price':        price,
-            'cta_text':     request.form.get('cta_text', 'Get it now!').strip(),
-            'features':     [f.strip() for f in request.form.get('features', '').split(',') if f.strip()],
-            'email':        request.form.get('email', '').strip().lower(),
-        }
-        session['last_landing'] = data
-        csrf = _generate_csrf()
-        return render_template('landing.html', **data, paid=False, csrf_token=csrf)
-
-    csrf = _generate_csrf()
-    return render_template('index.html', ideas_count=IDEAS_COUNT, csrf_token=csrf)
-
-
-@app.route('/generate-idea', methods=['POST'])
-def generate_idea():
-    # ✅ FIX 6 : pas de répétition consécutive
-    last = session.get('last_idea_index', -1)
-    available = [i for i in range(len(HOT_IDEAS)) if i != last]
-    idx = random.choice(available)
-    session['last_idea_index'] = idx
-    idea = HOT_IDEAS[idx]
-    return {
-        'product_name': idea['name'],
-        'tagline':      idea['tagline'],
-        'description':  idea['description'],
-        'features':     idea['features'],
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My Dashboard — BlitzPage</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    #toast {
+      position: fixed; bottom: 2rem; left: 50%;
+      transform: translateX(-50%) translateY(4rem);
+      background: #10b981; color: #000; font-weight: 700;
+      padding: 0.8rem 1.8rem; border-radius: 9999px;
+      transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s;
+      opacity: 0; z-index: 1000; white-space: nowrap; pointer-events: none;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+  </style>
+  <script>
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3000);
     }
 
+    function copyLink(url) {
+      navigator.clipboard.writeText(url)
+        .then(() => showToast('🔗 Link copied!'))
+        .catch(() => showToast('⚠️ Copy failed'));
+    }
+  </script>
+</head>
+<body class="bg-zinc-950 text-white min-h-screen">
 
-@app.route('/create-checkout-session', methods=['POST'])
-def create_checkout_session():
-    _check_csrf()  # ✅ CSRF
+  <div id="toast"></div>
 
-    # ✅ FIX 5 : re-validation serveur du prix (ne jamais faire confiance au client)
-    product_name = request.form.get('product_name', 'Product')
-    price = _validate_price(request.form.get('price', '16'))
-    price_cents = int(price * 100)
+  <!-- Header -->
+  <header class="border-b border-zinc-800 px-6 py-5 flex items-center justify-between">
+    <a href="/" class="text-2xl font-black tracking-tight">⚡ BLITZPAGE</a>
+    <a href="/launches" class="text-sm text-zinc-400 hover:text-white transition">🚀 All launches</a>
+    <a href="/" class="text-sm text-violet-400 hover:text-violet-300 font-semibold transition">
+      + New landing
+    </a>
+  </header>
 
-    try:
-        checkout_session = stripe.checkout.Session.create(
-            payment_method_types=['card'],
-            line_items=[{
-                'price_data': {
-                    'currency': 'usd',
-                    'product_data': {'name': product_name},
-                    'unit_amount': price_cents,
-                },
-                'quantity': 1,
-            }],
-            mode='payment',
-            # Passer l'email en metadata pour le récupérer dans le webhook
-            metadata={'email': session.get('last_landing', {}).get('email', '')},
-            success_url=DOMAIN + '/success?session_id={CHECKOUT_SESSION_ID}',
-            cancel_url=DOMAIN + '/cancel',
-        )
-        return redirect(checkout_session.url, code=303)
-    except Exception as e:
-        return str(e), 500
+  <div class="max-w-4xl mx-auto px-6 py-12">
 
+    {% if not email %}
+    <!-- ── Email gate ── -->
+    <div class="max-w-md mx-auto text-center">
+      <h1 class="text-4xl font-black mb-3">My Dashboard</h1>
+      <p class="text-zinc-400 mb-10">Enter the email you used to create your landings.</p>
+      <form method="POST" class="space-y-4">
+        <input type="email" name="email" required autofocus
+               class="w-full bg-zinc-900 rounded-2xl px-6 py-4 text-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
+               placeholder="you@email.com">
+        <button type="submit"
+                class="w-full bg-violet-600 hover:bg-violet-700 py-4 rounded-2xl text-lg font-bold transition">
+          Access my dashboard →
+        </button>
+      </form>
+    </div>
 
-# ✅ FIX 7 : Webhook Stripe — confirmation de paiement côté serveur
-@app.route('/webhook', methods=['POST'])
-def stripe_webhook():
-    payload = request.get_data()
-    sig_header = request.headers.get('Stripe-Signature', '')
+    {% else %}
+    <!-- ── Dashboard ── -->
+    <div class="flex items-center justify-between mb-10">
+      <div>
+        <h1 class="text-4xl font-black">My Landings</h1>
+        <p class="text-zinc-400 mt-1">{{ email }}</p>
+      </div>
+      <a href="/" class="bg-violet-600 hover:bg-violet-700 px-6 py-3 rounded-2xl font-bold transition text-sm">
+        + New landing
+      </a>
+    </div>
 
-    try:
-        event = stripe.Webhook.construct_event(payload, sig_header, STRIPE_WEBHOOK_SECRET)
-    except (ValueError, stripe.error.SignatureVerificationError):
-        abort(400)
+    {% if not landings %}
+    <div class="text-center py-20 text-zinc-500">
+      <p class="text-6xl mb-6">🌵</p>
+      <p class="text-xl">No landings yet.</p>
+      <a href="/" class="mt-6 inline-block text-violet-400 hover:text-violet-300 font-semibold transition">
+        Create your first one →
+      </a>
+    </div>
 
-    if event['type'] == 'checkout.session.completed':
-        cs = event['data']['object']
-        email = cs.get('metadata', {}).get('email', '')
-        # Marquer la landing comme payée en base
-        if email:
-            supabase.table('landings') \
-                .update({'paid': True}) \
-                .eq('email', email) \
-                .eq('paid', False) \
-                .execute()
+    {% else %}
 
-    return '', 200
+    <!-- Stats globales -->
+    <div class="grid grid-cols-3 gap-4 mb-10">
+      <div class="bg-zinc-900 rounded-2xl p-6 text-center">
+        <p class="text-4xl font-black text-violet-400">{{ landings | length }}</p>
+        <p class="text-zinc-400 text-sm mt-1">Landings live</p>
+      </div>
+      <div class="bg-zinc-900 rounded-2xl p-6 text-center">
+        <p class="text-4xl font-black text-emerald-400">
+          {{ landings | sum(attribute='views') }}
+        </p>
+        <p class="text-zinc-400 text-sm mt-1">Total views</p>
+      </div>
+      <div class="bg-zinc-900 rounded-2xl p-6 text-center">
+        <p class="text-4xl font-black text-amber-400">
+          {% set ns = namespace(total=0) %}
+          {% for l in landings %}
+            {% if l.price %}{% set ns.total = ns.total + (l.price | float) %}{% endif %}
+          {% endfor %}
+          ${{ "%.0f"|format(ns.total) }}
+        </p>
+        <p class="text-zinc-400 text-sm mt-1">Total price value</p>
+      </div>
+    </div>
 
+    <!-- Liste des landings -->
+    <div class="space-y-4">
+      {% for landing in landings %}
+      <div class="bg-zinc-900 rounded-3xl p-6 flex flex-col md:flex-row md:items-center gap-4">
 
-@app.route('/success')
-def success():
-    # ✅ FIX 8 : vérification de la session Stripe pour afficher le bon contenu
-    session_id = request.args.get('session_id', '')
-    data = session.get('last_landing', {})
+        <!-- Infos -->
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-3 mb-1">
+            <h2 class="text-xl font-bold truncate">{{ landing.product_name }}</h2>
+            {% if landing.published %}
+            <span class="shrink-0 bg-emerald-500/20 text-emerald-400 text-xs font-bold px-3 py-1 rounded-full">
+              🟢 LIVE
+            </span>
+            {% else %}
+            <span class="shrink-0 bg-zinc-700 text-zinc-400 text-xs font-bold px-3 py-1 rounded-full">
+              ⚫ Offline
+            </span>
+            {% endif %}
+          </div>
+          <p class="text-zinc-400 text-sm truncate">{{ landing.tagline }}</p>
+          {% if landing.url %}
+          <p class="text-violet-400 text-xs mt-2 truncate font-mono">{{ landing.url }}</p>
+          {% endif %}
+        </div>
 
-    if session_id and data:
-        try:
-            cs = stripe.checkout.Session.retrieve(session_id)
-            if cs.payment_status == 'paid':
-                data['paid'] = True
-                # Sauvegarde en base si pas encore fait
-                supabase.table('landings').upsert({
-                    'product_name': data.get('product_name'),
-                    'tagline':      data.get('tagline'),
-                    'description':  data.get('description'),
-                    'price':        str(data.get('price')),
-                    'features':     data.get('features'),
-                    'email':        data.get('email'),
-                    'paid':         True,
-                }, on_conflict='email,product_name').execute()
-                return render_template('landing.html', **data)
-        except Exception:
-            pass
+        <!-- Vues -->
+        <div class="text-center md:w-24 shrink-0">
+          <p class="text-3xl font-black text-emerald-400">{{ landing.views or 0 }}</p>
+          <p class="text-zinc-500 text-xs">views</p>
+        </div>
 
-    return render_template('success.html')
+        <!-- Prix -->
+        <div class="text-center md:w-20 shrink-0">
+          <p class="text-2xl font-bold text-amber-400">${{ landing.price }}</p>
+          <p class="text-zinc-500 text-xs">price</p>
+        </div>
 
+        <!-- Actions -->
+        <div class="flex gap-2 shrink-0">
+          {% if landing.url %}
+          <a href="{{ landing.url }}" target="_blank"
+             class="bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-xl text-sm font-semibold transition">
+            👁 View
+          </a>
+          <button onclick="copyLink('{{ landing.url }}')"
+                  class="bg-violet-600 hover:bg-violet-700 px-4 py-2 rounded-xl text-sm font-semibold transition">
+            🔗 Copy link
+          </button>
+          {% endif %}
+        </div>
 
-# ✅ FIX 9 : /my-landings protégé par un token de session (anti-énumération)
-@app.route('/my-landings', methods=['GET', 'POST'])
-def my_landings():
-    if request.method == 'POST':
-        email = request.form.get('email', '').strip().lower()
-        session['verified_email'] = email   # stocké en session côté serveur
-    else:
-        email = session.get('verified_email', request.args.get('email', ''))
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endif %}
 
-    landings = []
-    if email:
-        response = supabase.table('landings') \
-            .select('*') \
-            .eq('email', email) \
-            .eq('paid', True) \
-            .order('created_at', desc=True) \
-            .execute()
-        landings = response.data
-
-    return render_template('my-landings.html', landings=landings, email=email)
-
-
-@app.route('/cancel')
-def cancel():
-    return render_template('cancel.html')
-
-
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    debug = os.environ.get('FLASK_ENV') != 'production'
-    app.run(host='0.0.0.0', port=port, debug=debug)
+  </div>
+</body>
+</html>

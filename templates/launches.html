@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Latest Launches — BlitzPage</title>
+  <meta name="description" content="Discover the latest products built and launched with BlitzPage.">
+
+  <!-- OG pour partage -->
+  <meta property="og:title"       content="Latest Launches — BlitzPage">
+  <meta property="og:description" content="Discover indie products launched in the last 24h.">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+
+    .card-hover {
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card-hover:hover {
+      transform: translateY(-4px);
+      border-color: rgba(139,92,246,0.5);
+      box-shadow: 0 8px 32px rgba(139,92,246,0.12);
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.4; }
+    }
+    .pulse-dot { animation: pulse-dot 1.5s ease-in-out infinite; }
+
+    .tab-active {
+      background: rgba(139,92,246,0.15);
+      color: #a78bfa;
+      border-color: rgba(139,92,246,0.4);
+    }
+  </style>
+</head>
+<body class="bg-zinc-950 text-white min-h-screen">
+
+  <!-- ── NAV ── -->
+  <header class="border-b border-zinc-800/60 px-6 py-5 flex items-center justify-between sticky top-0 bg-zinc-950/90 backdrop-blur z-10">
+    <a href="/" class="text-2xl font-black tracking-tight">⚡ BLITZPAGE</a>
+    <div class="flex items-center gap-4">
+      <a href="/dashboard" class="text-sm text-zinc-400 hover:text-white transition">My dashboard</a>
+      <a href="/"
+         class="bg-violet-600 hover:bg-violet-700 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition">
+        + Launch mine
+      </a>
+    </div>
+  </header>
+
+  <div class="max-w-6xl mx-auto px-6 py-12">
+
+    <!-- ── HERO ── -->
+    <div class="text-center mb-12">
+      <div class="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm font-bold px-4 py-2 rounded-full mb-6">
+        <span class="pulse-dot w-2 h-2 bg-emerald-400 rounded-full inline-block"></span>
+        {{ total }} products live right now
+      </div>
+      <h1 class="text-5xl md:text-6xl font-black tracking-tighter mb-4">
+        Latest Launches 🚀
+      </h1>
+      <p class="text-xl text-zinc-400 max-w-xl mx-auto">
+        Indie products built and shipped from a phone. Each one took under 30 seconds to create.
+      </p>
+    </div>
+
+    <!-- ── TABS ── -->
+    <div class="flex gap-3 mb-10">
+      <a href="/launches?sort=latest"
+         class="px-5 py-2.5 rounded-xl border border-zinc-700 text-sm font-semibold transition
+                {{ 'tab-active' if sort == 'latest' else 'text-zinc-400 hover:text-white hover:border-zinc-500' }}">
+        🕐 Latest
+      </a>
+      <a href="/launches?sort=trending"
+         class="px-5 py-2.5 rounded-xl border border-zinc-700 text-sm font-semibold transition
+                {{ 'tab-active' if sort == 'trending' else 'text-zinc-400 hover:text-white hover:border-zinc-500' }}">
+        🔥 Trending
+      </a>
+    </div>
+
+    <!-- ── GRILLE ── -->
+    {% if not landings %}
+    <div class="text-center py-24 text-zinc-600">
+      <p class="text-6xl mb-6">🌱</p>
+      <p class="text-xl">No launches yet — be the first!</p>
+      <a href="/" class="mt-6 inline-block text-violet-400 hover:text-violet-300 font-semibold transition">
+        Create your landing →
+      </a>
+    </div>
+
+    {% else %}
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+      {% for landing in landings %}
+      <a href="{{ landing.url }}" target="_blank" rel="noopener"
+         class="card-hover group block bg-zinc-900 border border-zinc-800 rounded-3xl p-7 relative overflow-hidden">
+
+        <!-- Badge Trending -->
+        {% if landing.trending %}
+        <div class="absolute top-5 right-5 bg-amber-500/20 border border-amber-500/40 text-amber-400 text-xs font-bold px-3 py-1 rounded-full">
+          🔥 Trending
+        </div>
+        {% endif %}
+
+        <!-- Icône générée depuis le nom -->
+        <div class="w-12 h-12 bg-violet-500/20 rounded-2xl flex items-center justify-center mb-5 text-2xl">
+          {{ landing.product_name[0] | upper }}
+        </div>
+
+        <h2 class="text-xl font-bold mb-2 group-hover:text-violet-300 transition pr-20 truncate">
+          {{ landing.product_name }}
+        </h2>
+        <p class="text-zinc-400 text-sm leading-relaxed mb-5 line-clamp-2">
+          {{ landing.tagline }}
+        </p>
+
+        <!-- Features pills -->
+        {% if landing.features %}
+        {% set feats = landing.features if landing.features is iterable and landing.features is not string
+                       else landing.features.split(',') %}
+        <div class="flex flex-wrap gap-2 mb-5">
+          {% for feat in feats[:3] %}
+          <span class="bg-zinc-800 text-zinc-300 text-xs px-3 py-1 rounded-full">{{ feat.strip() }}</span>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Footer de la carte -->
+        <div class="flex items-center justify-between pt-4 border-t border-zinc-800">
+          <span class="text-2xl font-black text-white">${{ landing.price }}</span>
+          <div class="flex items-center gap-3">
+            <span class="text-zinc-500 text-xs flex items-center gap-1">
+              👁 {{ landing.views or 0 }} views
+            </span>
+            <span class="bg-violet-600 group-hover:bg-violet-500 transition text-white text-xs font-bold px-4 py-2 rounded-xl">
+              View →
+            </span>
+          </div>
+        </div>
+
+      </a>
+      {% endfor %}
+    </div>
+
+    <!-- ── PAGINATION ── -->
+    {% if has_prev or has_next %}
+    <div class="flex justify-center gap-4 mt-12">
+      {% if has_prev %}
+      <a href="/launches?sort={{ sort }}&page={{ page - 1 }}"
+         class="bg-zinc-800 hover:bg-zinc-700 px-6 py-3 rounded-xl font-semibold transition">
+        ← Previous
+      </a>
+      {% endif %}
+      <span class="bg-zinc-900 border border-zinc-800 px-6 py-3 rounded-xl text-zinc-400 text-sm">
+        Page {{ page }}
+      </span>
+      {% if has_next %}
+      <a href="/launches?sort={{ sort }}&page={{ page + 1 }}"
+         class="bg-zinc-800 hover:bg-zinc-700 px-6 py-3 rounded-xl font-semibold transition">
+        Next →
+      </a>
+      {% endif %}
+    </div>
+    {% endif %}
+    {% endif %}
+
+  </div>
+
+  <!-- ── CTA BOTTOM ── -->
+  <div class="border-t border-zinc-800 mt-16 py-16 text-center px-6">
+    <h2 class="text-4xl font-black mb-4">Ready to launch yours?</h2>
+    <p class="text-zinc-400 mb-8">30 seconds • Hosted instantly • Your link, live today</p>
+    <a href="/"
+       class="inline-block bg-violet-600 hover:bg-violet-700 text-white text-xl font-black
+              py-5 px-14 rounded-3xl hover:scale-105 transition-transform">
+      Create my landing ⚡
+    </a>
+  </div>
+
+</body>
+</html>
