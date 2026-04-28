@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ product_name }} — {{ tagline }}</title>
+
+  <!-- OG tags pour partage sur X/LinkedIn -->
+  <meta property="og:title"       content="{{ product_name }}">
+  <meta property="og:description" content="{{ tagline }}">
+  <meta property="og:type"        content="website">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+
+    .hero-glow {
+      background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(139,92,246,0.25), transparent);
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.6s ease both; }
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.35s; }
+    .delay-4 { animation-delay: 0.5s; }
+  </style>
+</head>
+<body class="bg-zinc-950 text-white min-h-screen hero-glow">
+
+  <!-- ── HERO ── -->
+  <div class="max-w-4xl mx-auto px-6 pt-24 pb-16 text-center">
+    <p class="fade-up text-violet-400 text-sm font-bold tracking-widest uppercase mb-6">
+      🚀 New launch
+    </p>
+    <h1 class="fade-up delay-1 text-6xl md:text-8xl font-black tracking-tighter leading-none mb-6">
+      {{ product_name }}
+    </h1>
+    <p class="fade-up delay-2 text-2xl md:text-3xl text-zinc-300 font-medium max-w-2xl mx-auto">
+      {{ tagline }}
+    </p>
+
+    <!-- CTA principal -->
+    <div class="fade-up delay-3 mt-12">
+      {% if cta_url %}
+      <a href="{{ cta_url }}" target="_blank" rel="noopener"
+         class="inline-block bg-white text-black text-2xl font-black py-6 px-16 rounded-full
+                hover:scale-105 active:scale-95 transition-transform shadow-2xl shadow-violet-500/20">
+        {{ cta_text }} — ${{ price }}
+      </a>
+      {% else %}
+      <div class="inline-block bg-white text-black text-2xl font-black py-6 px-16 rounded-full
+                  opacity-80 cursor-default">
+        {{ cta_text }} — ${{ price }}
+      </div>
+      {% endif %}
+      <p class="text-zinc-500 text-sm mt-4">One-time payment • No subscription</p>
+    </div>
+  </div>
+
+  <!-- ── DESCRIPTION ── -->
+  <div class="max-w-3xl mx-auto px-6 py-12">
+    <p class="fade-up delay-4 text-xl md:text-2xl text-zinc-300 leading-relaxed text-center">
+      {{ description }}
+    </p>
+  </div>
+
+  <!-- ── FEATURES ── -->
+  {% if features %}
+  <div class="max-w-4xl mx-auto px-6 py-12">
+    <div class="grid md:grid-cols-{{ [features|length, 3]|min }} gap-4">
+      {% for feature in features %}
+      <div class="bg-zinc-900/80 border border-zinc-800 rounded-3xl p-8 text-center hover:border-violet-500/50 transition">
+        <div class="w-10 h-10 bg-violet-500/20 rounded-xl flex items-center justify-center mx-auto mb-4">
+          <div class="w-3 h-3 bg-violet-400 rounded-full"></div>
+        </div>
+        <p class="text-lg font-semibold">{{ feature }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ── SOCIAL PROOF ── -->
+  <div class="max-w-4xl mx-auto px-6 py-12">
+    <div class="grid grid-cols-3 gap-4 text-center">
+      <div class="p-6">
+        <p class="text-4xl font-black text-violet-400">⚡</p>
+        <p class="text-sm text-zinc-400 mt-2">Immediate delivery</p>
+      </div>
+      <div class="p-6">
+        <p class="text-4xl font-black text-emerald-400">📱</p>
+        <p class="text-sm text-zinc-400 mt-2">Phone-only</p>
+      </div>
+      <div class="p-6">
+        <p class="text-4xl font-black text-amber-400">💸</p>
+        <p class="text-sm text-zinc-400 mt-2">First $ in 24h</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CTA BAS DE PAGE ── -->
+  {% if cta_url %}
+  <div class="max-w-md mx-auto px-6 py-16 text-center">
+    <a href="{{ cta_url }}" target="_blank" rel="noopener"
+       class="block bg-violet-600 hover:bg-violet-700 text-white text-2xl font-black py-7 px-8
+              rounded-3xl hover:scale-105 active:scale-95 transition-transform">
+      {{ cta_text }} — ${{ price }}
+    </a>
+    <p class="text-zinc-500 text-xs mt-4">Secure payment • Instant access</p>
+  </div>
+  {% endif %}
+
+  <!-- ── FOOTER ── -->
+  <footer class="text-center py-10 text-zinc-600 text-xs border-t border-zinc-900">
+    Made with <a href="/" class="text-violet-500 hover:text-violet-400 transition">BlitzPage</a>
+     • Launch your own in 30 seconds
+  </footer>
+
+</body>
+</html>
