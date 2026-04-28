@@ -15,21 +15,22 @@
       opacity: 0; z-index: 1000; white-space: nowrap; pointer-events: none;
     }
     #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-  </style>
-  <script>
-    function showToast(msg) {
-      const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), 3000);
-    }
 
-    function copyLink(url) {
-      navigator.clipboard.writeText(url)
-        .then(() => showToast('🔗 Link copied!'))
-        .catch(() => showToast('⚠️ Copy failed'));
+    /* Chart container */
+    .chart-wrap {
+      height: 0; overflow: hidden;
+      transition: height 0.35s cubic-bezier(0.4,0,0.2,1);
     }
-  </script>
+    .chart-wrap.open { height: 220px; }
+
+    /* SVG sparkline tooltip */
+    .chart-tooltip {
+      position: absolute; background: #18181b; border: 1px solid #3f3f46;
+      color: #fff; font-size: 12px; font-weight: 600;
+      padding: 4px 10px; border-radius: 8px; pointer-events: none;
+      opacity: 0; transition: opacity 0.15s; white-space: nowrap;
+    }
+  </style>
 </head>
 <body class="bg-zinc-950 text-white min-h-screen">
 
@@ -38,10 +39,10 @@
   <!-- Header -->
   <header class="border-b border-zinc-800 px-6 py-5 flex items-center justify-between">
     <a href="/" class="text-2xl font-black tracking-tight">⚡ BLITZPAGE</a>
-    <a href="/launches" class="text-sm text-zinc-400 hover:text-white transition">🚀 All launches</a>
-    <a href="/" class="text-sm text-violet-400 hover:text-violet-300 font-semibold transition">
-      + New landing
-    </a>
+    <div class="flex items-center gap-5">
+      <a href="/launches" class="text-sm text-zinc-400 hover:text-white transition">🚀 All launches</a>
+      <a href="/" class="text-sm text-violet-400 hover:text-violet-300 font-semibold transition">+ New landing</a>
+    </div>
   </header>
 
   <div class="max-w-4xl mx-auto px-6 py-12">
@@ -67,7 +68,7 @@
     <div class="flex items-center justify-between mb-10">
       <div>
         <h1 class="text-4xl font-black">My Landings</h1>
-        <p class="text-zinc-400 mt-1">{{ email }}</p>
+        <p class="text-zinc-400 mt-1 text-sm">{{ email }}</p>
       </div>
       <a href="/" class="bg-violet-600 hover:bg-violet-700 px-6 py-3 rounded-2xl font-bold transition text-sm">
         + New landing
@@ -84,7 +85,6 @@
     </div>
 
     {% else %}
-
     <!-- Stats globales -->
     <div class="grid grid-cols-3 gap-4 mb-10">
       <div class="bg-zinc-900 rounded-2xl p-6 text-center">
@@ -92,17 +92,13 @@
         <p class="text-zinc-400 text-sm mt-1">Landings live</p>
       </div>
       <div class="bg-zinc-900 rounded-2xl p-6 text-center">
-        <p class="text-4xl font-black text-emerald-400">
-          {{ landings | sum(attribute='views') }}
-        </p>
+        <p class="text-4xl font-black text-emerald-400">{{ landings | sum(attribute='views') }}</p>
         <p class="text-zinc-400 text-sm mt-1">Total views</p>
       </div>
       <div class="bg-zinc-900 rounded-2xl p-6 text-center">
         <p class="text-4xl font-black text-amber-400">
           {% set ns = namespace(total=0) %}
-          {% for l in landings %}
-            {% if l.price %}{% set ns.total = ns.total + (l.price | float) %}{% endif %}
-          {% endfor %}
+          {% for l in landings %}{% if l.price %}{% set ns.total = ns.total + (l.price | float) %}{% endif %}{% endfor %}
           ${{ "%.0f"|format(ns.total) }}
         </p>
         <p class="text-zinc-400 text-sm mt-1">Total price value</p>
@@ -110,62 +106,236 @@
     </div>
 
     <!-- Liste des landings -->
-    <div class="space-y-4">
+    <div class="space-y-4" id="landings-list">
       {% for landing in landings %}
-      <div class="bg-zinc-900 rounded-3xl p-6 flex flex-col md:flex-row md:items-center gap-4">
+      <div class="bg-zinc-900 rounded-3xl overflow-hidden" id="card-{{ loop.index }}">
 
-        <!-- Infos -->
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-3 mb-1">
-            <h2 class="text-xl font-bold truncate">{{ landing.product_name }}</h2>
-            {% if landing.published %}
-            <span class="shrink-0 bg-emerald-500/20 text-emerald-400 text-xs font-bold px-3 py-1 rounded-full">
-              🟢 LIVE
-            </span>
-            {% else %}
-            <span class="shrink-0 bg-zinc-700 text-zinc-400 text-xs font-bold px-3 py-1 rounded-full">
-              ⚫ Offline
-            </span>
+        <!-- Ligne principale -->
+        <div class="p-6 flex flex-col md:flex-row md:items-center gap-4">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-3 mb-1">
+              <h2 class="text-xl font-bold truncate">{{ landing.product_name }}</h2>
+              {% if landing.published %}
+              <span class="shrink-0 bg-emerald-500/20 text-emerald-400 text-xs font-bold px-3 py-1 rounded-full">🟢 LIVE</span>
+              {% endif %}
+            </div>
+            <p class="text-zinc-400 text-sm truncate">{{ landing.tagline }}</p>
+            {% if landing.url %}
+            <p class="text-violet-400 text-xs mt-1 font-mono truncate">{{ landing.url }}</p>
             {% endif %}
           </div>
-          <p class="text-zinc-400 text-sm truncate">{{ landing.tagline }}</p>
-          {% if landing.url %}
-          <p class="text-violet-400 text-xs mt-2 truncate font-mono">{{ landing.url }}</p>
-          {% endif %}
+
+          <!-- Vues -->
+          <div class="text-center md:w-20 shrink-0">
+            <p class="text-3xl font-black text-emerald-400">{{ landing.views or 0 }}</p>
+            <p class="text-zinc-500 text-xs">views</p>
+          </div>
+
+          <!-- Prix -->
+          <div class="text-center md:w-16 shrink-0">
+            <p class="text-2xl font-bold text-amber-400">${{ landing.price }}</p>
+            <p class="text-zinc-500 text-xs">price</p>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex gap-2 shrink-0 flex-wrap">
+            {% if landing.url %}
+            <a href="{{ landing.url }}" target="_blank"
+               class="bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-xl text-sm font-semibold transition">
+              👁 View
+            </a>
+            <button onclick="copyLink('{{ landing.url }}')"
+                    class="bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-xl text-sm font-semibold transition">
+              🔗 Copy
+            </button>
+            {% endif %}
+            <!-- Bouton analytics -->
+            {% if landing.slug %}
+            <button onclick="toggleChart('{{ landing.slug }}', {{ loop.index }})"
+                    id="btn-chart-{{ loop.index }}"
+                    class="bg-violet-600/20 hover:bg-violet-600/40 text-violet-300 border border-violet-500/30
+                           px-4 py-2 rounded-xl text-sm font-semibold transition">
+              📈 Stats
+            </button>
+            {% endif %}
+          </div>
         </div>
 
-        <!-- Vues -->
-        <div class="text-center md:w-24 shrink-0">
-          <p class="text-3xl font-black text-emerald-400">{{ landing.views or 0 }}</p>
-          <p class="text-zinc-500 text-xs">views</p>
+        <!-- Zone graphique (masquée par défaut) -->
+        {% if landing.slug %}
+        <div class="chart-wrap" id="chart-{{ loop.index }}">
+          <div class="px-6 pb-6 relative">
+            <div class="flex items-center justify-between mb-3">
+              <p class="text-sm font-semibold text-zinc-400">Views — last 30 days</p>
+              <p class="text-xs text-zinc-600" id="chart-total-{{ loop.index }}"></p>
+            </div>
+            <!-- Canvas SVG injecté par JS -->
+            <div id="chart-svg-{{ loop.index }}" class="relative" style="height:120px">
+              <div class="absolute inset-0 flex items-center justify-center text-zinc-600 text-sm" id="chart-loading-{{ loop.index }}">
+                Loading…
+              </div>
+            </div>
+            <!-- Tooltip -->
+            <div class="chart-tooltip" id="tooltip-{{ loop.index }}"></div>
+          </div>
         </div>
-
-        <!-- Prix -->
-        <div class="text-center md:w-20 shrink-0">
-          <p class="text-2xl font-bold text-amber-400">${{ landing.price }}</p>
-          <p class="text-zinc-500 text-xs">price</p>
-        </div>
-
-        <!-- Actions -->
-        <div class="flex gap-2 shrink-0">
-          {% if landing.url %}
-          <a href="{{ landing.url }}" target="_blank"
-             class="bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-xl text-sm font-semibold transition">
-            👁 View
-          </a>
-          <button onclick="copyLink('{{ landing.url }}')"
-                  class="bg-violet-600 hover:bg-violet-700 px-4 py-2 rounded-xl text-sm font-semibold transition">
-            🔗 Copy link
-          </button>
-          {% endif %}
-        </div>
+        {% endif %}
 
       </div>
       {% endfor %}
     </div>
     {% endif %}
     {% endif %}
-
   </div>
+
+  <script>
+    // ── Toast ──────────────────────────────────────────────────────────────────
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    function copyLink(url) {
+      navigator.clipboard.writeText(url)
+        .then(() => showToast('🔗 Link copied!'))
+        .catch(() => showToast('⚠️ Copy failed'));
+    }
+
+    // ── Chart toggle ──────────────────────────────────────────────────────────
+    const chartLoaded = {};
+
+    async function toggleChart(slug, idx) {
+      const wrap = document.getElementById('chart-' + idx);
+      const btn  = document.getElementById('btn-chart-' + idx);
+      const isOpen = wrap.classList.contains('open');
+
+      if (isOpen) {
+        wrap.classList.remove('open');
+        btn.textContent = '📈 Stats';
+        return;
+      }
+
+      wrap.classList.add('open');
+      btn.textContent = '▲ Hide';
+
+      if (chartLoaded[slug]) return;   // déjà chargé
+      chartLoaded[slug] = true;
+
+      try {
+        const res  = await fetch('/api/analytics/' + slug);
+        if (!res.ok) throw new Error('Unauthorized');
+        const json = await res.json();
+        renderSparkline(json.data, idx);
+      } catch (e) {
+        document.getElementById('chart-loading-' + idx).textContent = '⚠️ ' + e.message;
+      }
+    }
+
+    // ── Sparkline SVG ─────────────────────────────────────────────────────────
+    function renderSparkline(data, idx) {
+      const container = document.getElementById('chart-svg-' + idx);
+      const loading   = document.getElementById('chart-loading-' + idx);
+      const totalEl   = document.getElementById('chart-total-' + idx);
+      const tooltip   = document.getElementById('tooltip-' + idx);
+
+      const W = container.offsetWidth || 600;
+      const H = 120;
+      const PAD_L = 36, PAD_R = 8, PAD_T = 12, PAD_B = 28;
+      const chartW = W - PAD_L - PAD_R;
+      const chartH = H - PAD_T - PAD_B;
+
+      const values = data.map(d => d.views);
+      const maxV   = Math.max(...values, 1);
+      const total  = values.reduce((a, b) => a + b, 0);
+      totalEl.textContent = total + ' views total';
+
+      const n = data.length;
+      const xStep = chartW / (n - 1);
+
+      function xPos(i) { return PAD_L + i * xStep; }
+      function yPos(v) { return PAD_T + chartH - (v / maxV) * chartH; }
+
+      // Polyline points
+      const pts = data.map((d, i) => `${xPos(i)},${yPos(d.views)}`).join(' ');
+
+      // Area fill points
+      const areaFirst = `${xPos(0)},${PAD_T + chartH}`;
+      const areaLast  = `${xPos(n-1)},${PAD_T + chartH}`;
+      const areaPts   = `${areaFirst} ${pts} ${areaLast}`;
+
+      // Y grid lines (3 lignes)
+      let gridLines = '';
+      for (let g = 0; g <= 2; g++) {
+        const v = Math.round(maxV * g / 2);
+        const y = yPos(v);
+        gridLines += `<line x1="${PAD_L}" y1="${y}" x2="${W - PAD_R}" y2="${y}"
+                        stroke="#27272a" stroke-width="1"/>
+                      <text x="${PAD_L - 4}" y="${y + 4}" text-anchor="end"
+                        fill="#52525b" font-size="10">${v}</text>`;
+      }
+
+      // X labels (afficher 5 dates espacées)
+      let xLabels = '';
+      const labelIdx = [0, Math.floor(n/4), Math.floor(n/2), Math.floor(3*n/4), n-1];
+      labelIdx.forEach(i => {
+        const d = data[i].day.slice(5); // "MM-DD"
+        xLabels += `<text x="${xPos(i)}" y="${H - 4}" text-anchor="middle"
+                      fill="#52525b" font-size="10">${d}</text>`;
+      });
+
+      // Dot sur le dernier point
+      const lastX = xPos(n-1), lastY = yPos(values[n-1]);
+
+      const svg = `
+<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg"
+     style="overflow:visible">
+  <defs>
+    <linearGradient id="grad-${idx}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#7c3aed" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  ${gridLines}
+  ${xLabels}
+  <!-- Area fill -->
+  <polygon points="${areaPts}" fill="url(#grad-${idx})"/>
+  <!-- Line -->
+  <polyline points="${pts}" fill="none" stroke="#7c3aed" stroke-width="2.5"
+            stroke-linejoin="round" stroke-linecap="round"/>
+  <!-- Last point dot -->
+  <circle cx="${lastX}" cy="${lastY}" r="4" fill="#7c3aed"/>
+  <circle cx="${lastX}" cy="${lastY}" r="7" fill="#7c3aed" fill-opacity="0.25"/>
+  <!-- Hover targets (transparents) -->
+  ${data.map((d, i) => `
+  <rect x="${xPos(i) - xStep/2}" y="${PAD_T}" width="${xStep}" height="${chartH}"
+        fill="transparent" class="hover-target"
+        data-idx="${i}" data-day="${d.day}" data-views="${d.views}"
+        data-x="${xPos(i)}" data-y="${yPos(d.views)}"/>
+  `).join('')}
+</svg>`;
+
+      container.innerHTML = svg;
+      loading.style.display = 'none';
+
+      // Interactivité tooltip
+      container.querySelectorAll('.hover-target').forEach(rect => {
+        rect.addEventListener('mouseenter', e => {
+          const r    = e.target;
+          const cx   = parseFloat(r.dataset.x);
+          const cy   = parseFloat(r.dataset.y);
+          tooltip.style.left    = (cx - 30) + 'px';
+          tooltip.style.top     = (cy - 36) + 'px';
+          tooltip.textContent   = r.dataset.day.slice(5) + ' — ' + r.dataset.views + ' views';
+          tooltip.style.opacity = '1';
+        });
+        rect.addEventListener('mouseleave', () => {
+          tooltip.style.opacity = '0';
+        });
+      });
+    }
+  </script>
+
 </body>
 </html>
