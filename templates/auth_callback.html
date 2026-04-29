@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Signing you in… — BlitzPage</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-zinc-950 text-white min-h-screen flex items-center justify-center px-6">
+
+  <div class="text-center max-w-sm w-full">
+    <div class="text-6xl mb-6" id="icon">⚡</div>
+    <h1 class="text-3xl font-black mb-3" id="title">Signing you in…</h1>
+    <p class="text-zinc-400" id="subtitle">Please wait a moment.</p>
+
+    <!-- Spinner -->
+    <div id="spinner" class="mt-8 flex justify-center">
+      <svg class="animate-spin h-8 w-8 text-violet-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+      </svg>
+    </div>
+  </div>
+
+  <script>
+    /**
+     * Supabase redirige vers cette page avec les tokens dans le fragment URL :
+     * /auth/callback#access_token=...&refresh_token=...&type=magiclink
+     *
+     * On les extrait, on les envoie à /auth/verify (Flask),
+     * Flask valide et ouvre la session, puis redirige vers le dashboard.
+     */
+    async function handleCallback() {
+      const hash   = window.location.hash.substring(1);
+      const params = new URLSearchParams(hash);
+
+      const access_token  = params.get('access_token');
+      const refresh_token = params.get('refresh_token');
+      const type          = params.get('type');
+      const errorDesc     = params.get('error_description');
+
+      if (errorDesc) {
+        showError('Link expired or invalid. ' + decodeURIComponent(errorDesc));
+        return;
+      }
+
+      if (!access_token) {
+        showError('No token found in the link. Please try signing in again.');
+        return;
+      }
+
+      try {
+        const res = await fetch('/auth/verify', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ access_token, refresh_token }),
+        });
+
+        const data = await res.json();
+
+        if (data.ok) {
+          document.getElementById('icon').textContent    = '✅';
+          document.getElementById('title').textContent   = 'You\'re in!';
+          document.getElementById('subtitle').textContent = 'Redirecting to your dashboard…';
+          document.getElementById('spinner').style.display = 'none';
+          setTimeout(() => window.location.href = data.redirect || '/dashboard', 800);
+        } else {
+          showError(data.error || 'Authentication failed. Please try again.');
+        }
+      } catch (e) {
+        showError('Network error. Please check your connection and try again.');
+      }
+    }
+
+    function showError(msg) {
+      document.getElementById('icon').textContent     = '⚠️';
+      document.getElementById('title').textContent    = 'Sign-in failed';
+      document.getElementById('subtitle').innerHTML   =
+        `<span class="text-red-400">${msg}</span><br><br>
+         <a href="/login" class="text-violet-400 hover:text-violet-300 underline font-semibold">
+           Try again →
+         </a>`;
+      document.getElementById('spinner').style.display = 'none';
+    }
+
+    handleCallback();
+  </script>
+</body>
+</html>

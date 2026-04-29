@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign in — BlitzPage</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.5s ease both; }
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+
+    /* Gradient border on focus */
+    .magic-input:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px #7c3aed;
+    }
+  </style>
+</head>
+<body class="bg-zinc-950 text-white min-h-screen flex items-center justify-center px-6">
+
+  <div class="w-full max-w-md">
+
+    <!-- Logo -->
+    <div class="text-center mb-10 fade-up">
+      <a href="/" class="text-3xl font-black tracking-tight">⚡ BLITZPAGE</a>
+    </div>
+
+    {% if success %}
+    <!-- ── Succès : email envoyé ── -->
+    <div class="fade-up bg-emerald-900/30 border border-emerald-500/40 rounded-3xl p-10 text-center">
+      <div class="text-6xl mb-6">📬</div>
+      <h1 class="text-3xl font-black mb-3">Check your inbox!</h1>
+      <p class="text-zinc-400 leading-relaxed">
+        We sent you a magic link. Click it to sign in instantly —
+        no password needed. Check your spam if you don't see it.
+      </p>
+      <p class="mt-8 text-zinc-600 text-sm">The link expires in 1 hour.</p>
+    </div>
+
+    {% else %}
+    <!-- ── Formulaire ── -->
+    <div class="fade-up delay-1 bg-zinc-900 rounded-3xl p-10">
+      <h1 class="text-3xl font-black mb-2 text-center">Sign in</h1>
+      <p class="text-zinc-400 text-center text-sm mb-8">
+        No password. We'll email you a magic link.
+      </p>
+
+      {% if error %}
+      <div class="bg-red-900/30 border border-red-500/40 rounded-2xl px-5 py-4 mb-6 text-red-300 text-sm">
+        ⚠️ {{ error }}
+      </div>
+      {% endif %}
+
+      <form method="POST" class="space-y-5">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div>
+          <label class="block text-sm font-medium mb-2 text-zinc-300">Your email</label>
+          <input type="email" name="email" required autofocus
+                 class="magic-input w-full bg-zinc-800 rounded-2xl px-6 py-4 text-lg transition"
+                 placeholder="you@email.com">
+        </div>
+        <button type="submit"
+                class="w-full bg-violet-600 hover:bg-violet-700 active:scale-95
+                       py-5 rounded-2xl text-xl font-black transition-all">
+          Send magic link ✨
+        </button>
+      </form>
+
+      <p class="text-center text-zinc-600 text-xs mt-8">
+        By signing in, you accept our terms. No spam, ever.
+      </p>
+    </div>
+
+    <div class="fade-up delay-2 text-center mt-6">
+      <a href="/" class="text-zinc-500 hover:text-zinc-300 text-sm transition">
+        ← Back to home
+      </a>
+    </div>
+    {% endif %}
+
+  </div>
+</body>
+</html>
